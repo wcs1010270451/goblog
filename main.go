@@ -53,55 +53,10 @@ func validateArticleFormData(title string, body string) map[string]string {
 	return errors
 }
 
-//首页
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
-}
-
-//帮助
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
-}
-
-//404
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-
-	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1><p>如有疑惑，请联系我们。</p>")
-}
-
 // Article  对应一条文章数据
 type Article struct {
 	Title, Body string
 	ID          int64
-}
-
-//文章列表
-func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. 执行查询语句，返回一个结果集
-	rows, err := db.Query("SELECT * from articles")
-	logger.LogError(err)
-	defer rows.Close()
-
-	var articles []Article
-	//2. 循环读取结果
-	for rows.Next() {
-		var article Article
-		// 2.1 扫描每一行的结果并赋值到一个 article 对象中
-		err := rows.Scan(&article.ID, &article.Title, &article.Body)
-		logger.LogError(err)
-		// 2.2 将 article 追加到 articles 的这个数组中
-		articles = append(articles, article)
-	}
-	// 2.3 检测遍历时是否发生错误
-	err = rows.Err()
-	logger.LogError(err)
-	// 3. 加载模板
-	tmpl, err := template.ParseFiles("resources/views/articles/index.gohtml")
-	logger.LogError(err)
-	// 4. 渲染模板，将所有文章的数据传输进去
-	tmpl.Execute(w, articles)
 }
 
 // ArticlesFormData 创建博文表单数据
@@ -387,8 +342,6 @@ func main() {
 
 	bootstrap.SetupDB()
 	router = bootstrap.SetupRoute()
-
-	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 
 	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
