@@ -3,51 +3,22 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"go/types"
+	"goblog/pkg/database"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
+	"goblog/pkg/types"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 	"unicode/utf8"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
 var router *mux.Router
 var db *sql.DB
-
-//初始化DB
-func initDB() {
-	var err error
-	config := mysql.Config{
-		User:                 "homestead",
-		Passwd:               "secret",
-		Addr:                 "127.0.0.1:3306",
-		Net:                  "tcp",
-		DBName:               "goblog",
-		AllowNativePasswords: true,
-	}
-
-	//准备数据库连接池
-	db, err = sql.Open("mysql", config.Clone().FormatDSN())
-	logger.LogError(err)
-
-	//设置最大连接数
-	db.SetMaxOpenConns(25)
-	//设置最大空闲连接数
-	db.SetMaxIdleConns(25)
-	//设置每个连接的过期时间
-	db.SetConnMaxLifetime(5 * time.Minute)
-
-	//尝试连接，失败会报错
-	err = db.Ping()
-	logger.LogError(err)
-}
 
 //统一 获取URL参数
 func getRouteVariable(parameterName string, r *http.Request) string {
@@ -432,17 +403,6 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 	})
 }
 
-//创建表
-func createTables() {
-	createArticlesSQL := `CREATE TABLE IF NOT EXISTS articles(
-		id bigint(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
-		title varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-		body longtext COLLATE utf8mb4_unicode_ci
-	); `
-	_, err := db.Exec(createArticlesSQL)
-	logger.LogError(err)
-}
-
 // Link 方法用来生成文章链接
 func (a Article) Link() string {
 	showUrl, err := router.Get("articles.show").URL("id", strconv.FormatInt(a.ID, 10))
@@ -454,8 +414,8 @@ func (a Article) Link() string {
 }
 
 func main() {
-	initDB()
-	createTables()
+	database.Initialize()
+	db = database.DB
 
 	route.Initialize()
 	router = route.Router
