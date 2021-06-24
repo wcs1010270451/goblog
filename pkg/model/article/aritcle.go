@@ -6,7 +6,7 @@ import (
 )
 
 type Article struct {
-	ID    int
+	ID    int64
 	Title string
 	Body  string
 }
