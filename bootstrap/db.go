@@ -1,14 +1,14 @@
 package bootstrap
 
 import (
-	"goblog/pkg/model"
+	"goblog/tests/app/models"
 	"time"
 )
 
 // SetupDB 初始化数据库和 ORM
 func SetupDB() {
 	// 建立数据库连接池
-	db := model.ConnectDB()
+	db := models.ConnectDB()
 
 	// 命令行打印数据库请求的信息
 	sqlDB, _ := db.DB()
